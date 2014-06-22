@@ -10,3 +10,9 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/java_projects/SnakeSync/nbproject/private/
+/java_projects/SnakeSync/build/
+/java_projects/SnakeServer/nbproject/private/
+/java_projects/SnakeServer/build/
+/java_projects/SnakeClient/nbproject/private/
+/java_projects/SnakeClient/build/
