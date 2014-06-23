@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.rmi.Naming;
 import snake.server.ISnakeServer;
+import snake.server.Settings;
 
 /**
  *

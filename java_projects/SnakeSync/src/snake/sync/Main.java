@@ -6,12 +6,25 @@
 
 package snake.sync;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.rmi.Naming;
+import snake.server.ISnakeServer;
+import snake.server.Settings;
+
 /**
  *
  * @author Gustavo
  */
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello SnakeSync");
+        System.out.println("Start SnakeSync");
+        try {
+            ISnakeServer server = (ISnakeServer) Naming.lookup("//localhost/Server");
+            
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+        System.out.println("End SnakeSync");
     }
 }
