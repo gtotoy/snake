@@ -16,3 +16,8 @@ hs_err_pid*
 /java_projects/SnakeServer/build/
 /java_projects/SnakeClient/nbproject/private/
 /java_projects/SnakeClient/build/
+/java_projects/SnakeClient/dist/
+/java_projects/SnakeServer/dist/
+/java_projects/TestRMIIO/nbproject/private/
+/java_projects/TestRMIIO/build/
+/java_projects/TestRMIIO/dist/
