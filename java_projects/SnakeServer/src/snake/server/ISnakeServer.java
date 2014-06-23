@@ -6,16 +6,18 @@
 
 package snake.server;
 
+import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.io.*;
+import java.nio.file.Path;
 
 /**
  *
  * @author Gustavo
  */
 public interface ISnakeServer extends Remote {
-    public String sayTo ( String text ) throws RemoteException;
-    public void copyFile ( String relativePath ) throws RemoteException;
-    public FileInputStream getFIS ( String relativePath ) throws RemoteException, FileNotFoundException;
+    public boolean userExists(String username) throws RemoteException;
+    public void createUser(String username) throws RemoteException, IOException;
+    public boolean login(String username) throws RemoteException;
+    public void setBoxDirectory(Path directory) throws RemoteException;
 }

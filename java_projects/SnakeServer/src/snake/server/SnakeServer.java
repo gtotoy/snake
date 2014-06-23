@@ -6,13 +6,12 @@
 
 package snake.server;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 /**
@@ -20,45 +19,36 @@ import java.rmi.server.UnicastRemoteObject;
  * @author Gustavo
  */
 public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
-    public SnakeServer() throws RemoteException {
+    public SnakeServer( Path parentFolder ) throws RemoteException {
         super();
-    }
-    
-    @Override
-    public String sayTo(String text) throws RemoteException {
-        return "Hello " + text;
+        parentFolder_ = parentFolder;
     }
 
     @Override
-    public void copyFile ( String relativePath ) throws RemoteException {
-        try {
-            FileInputStream fis = new FileInputStream(Settings.server_path + relativePath);
-            FileOutputStream fos = new FileOutputStream(Settings.server_path + "copy.txt");
-            FileChannel in = fis.getChannel();
-            FileChannel out = fos.getChannel();
-            in.transferTo(0, in.size(), out);
-            out.close();
-            in.close();
-        } catch (Exception e) {
-            
-        }
+    public boolean userExists(String username) throws RemoteException {
+        Path userFolderPath = parentFolder_.resolve(username);
+        return Files.exists(userFolderPath, LinkOption.NOFOLLOW_LINKS) && 
+                Files.isDirectory(userFolderPath, LinkOption.NOFOLLOW_LINKS);
     }
+
+    
     
     @Override
-    public FileInputStream getFIS(String relativePath) throws RemoteException, FileNotFoundException {
-        return new FileInputStream(Settings.server_path + relativePath);
+    public void createUser(String username) throws RemoteException, IOException {
+        Files.createDirectory(parentFolder_.resolve(username));
+    }
+
+    @Override
+    public boolean login(String username) throws RemoteException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setBoxDirectory(Path directory) throws RemoteException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
     
     
-    public static void main(String[] args) {
-        try {
-            Registry reg = LocateRegistry.createRegistry(Settings.port);
-            reg.rebind("Server", new SnakeServer());
-            System.out.println("Server started");
-        } catch (Exception e) {
-            System.err.println(e);
-        }
-    }
-    
+    private Path parentFolder_;
 }

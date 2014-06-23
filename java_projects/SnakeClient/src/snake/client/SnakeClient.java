@@ -6,36 +6,43 @@
 
 package snake.client;
 
-import java.rmi.Naming;
+import java.io.File;
+import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Path;
 import snake.server.ISnakeServer;
-import java.io.*;
-import java.nio.channels.FileChannel;
-import snake.server.Settings;
+import java.rmi.RemoteException;
+import java.util.Map;
 
 /**
  *
  * @author Gustavo
  */
 public class SnakeClient {
-
-    public static void main(String[] args) {
-        try {
-            ISnakeServer server = (ISnakeServer) Naming.lookup("//localhost/Server");
-            System.out.println(server.sayTo("World"));
-            /*FileInputStream fis = server.getFIS(Settings.file_relative_path);
-            FileOutputStream fos = new FileOutputStream(Settings.client_path + Settings.file_relative_path);
-            
-            FileChannel in = fis.getChannel();
-            FileChannel out = fos.getChannel();
-            in.transferTo(0, in.size(), out);
-            out.close();
-            in.close();*/
-            server.copyFile(Settings.file_relative_path);
-            FileInputStream fis = server.getFIS(Settings.file_relative_path);
-            System.out.println(fis);
-        } catch (Exception e) {
-            System.err.println(e);
+    
+    public static void createUser(ISnakeServer server, String username) throws RemoteException {
+        if (!server.userExists(username)) {
+            try {
+                server.createUser(username);
+                System.out.println("User " + username + " created succesfully");
+            } catch (IOException e) {
+                System.err.println(e);
+            }
+        } else {
+            System.err.println("User not created, " + username + " alreade exists");
         }
     }
     
+    public static void setBoxDirectory(ISnakeServer server, String username, Path directory) throws RemoteException {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("java -jar SnakeSync.jar", username, directory.toAbsolutePath().toString());
+            pb.directory(directory.toFile());
+            File log = new File("log.txt");
+            pb.redirectErrorStream(true);
+            pb.redirectOutput(Redirect.appendTo(log));
+            Process p = pb.start();
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+    }
 }

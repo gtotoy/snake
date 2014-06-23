@@ -10,14 +10,8 @@ package snake.sync;
  *
  * @author Gustavo
  */
-public class SnakeSync {
-
-    /**
-     * @param args the command line arguments
-     */
+public class Main {
     public static void main(String[] args) {
-        // TODO code application logic here
-        System.out.println("Hello snake_sync");
+        System.out.println("Hello SnakeSync");
     }
-    
 }
