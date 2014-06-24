@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  *
@@ -20,4 +21,5 @@ public interface ISnakeServer extends Remote {
     public void createUser(String username) throws RemoteException, IOException;
     public boolean login(String username) throws RemoteException;
     public void setBoxDirectory(Path directory) throws RemoteException;
+    public List<PathDescriptor> getPathDescriptor() throws RemoteException;
 }

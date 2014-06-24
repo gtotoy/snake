@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package snake.client;
 
 import java.nio.file.Path;
@@ -19,9 +13,11 @@ import snake.server.Settings;
 public class Main {
     public static void main(String[] args) {
         try {
-            ISnakeServer server = (ISnakeServer) Naming.lookup("//localhost/Server");
+            String url = "rmi://localhost/Server";
+            ISnakeServer server = (ISnakeServer) Naming.lookup(url);
+            System.out.println(server.getPathDescriptor());
             String username = "gtotoy";
-            Path boxDirectory = Paths.get("D:/snake_test/client");
+            Path boxDirectory = Paths.get(Settings.client_folder_path);
             //SnakeClient.createUser(server, username);
             SnakeClient.setBoxDirectory(server, username, boxDirectory);
         } catch (Exception e) {

@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package snake.server;
 
 import java.nio.file.Files;
@@ -26,7 +20,8 @@ public class Main {
         
         Path parentFolderPath = Paths.get(args[0]);
         Path absoluteParentFolderPath = parentFolderPath.toAbsolutePath();
-        if ( Files.exists(parentFolderPath, LinkOption.NOFOLLOW_LINKS) && Files.isDirectory(parentFolderPath, LinkOption.NOFOLLOW_LINKS) ) {
+        if ( Files.exists(parentFolderPath, LinkOption.NOFOLLOW_LINKS) && 
+                Files.isDirectory(parentFolderPath, LinkOption.NOFOLLOW_LINKS) ) {
             System.out.println("Snake Server's folder: " + absoluteParentFolderPath);
             try {
                 Registry registry = LocateRegistry.createRegistry(Settings.port);
@@ -36,7 +31,7 @@ public class Main {
                 System.err.println(e);
             }
         } else {
-            System.err.println(absoluteParentFolderPath + " is an invalid folder");
+            System.err.println(absoluteParentFolderPath + " is an invalid folder, check its existence and permissions");
         }
     }
 }
