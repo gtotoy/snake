@@ -10,16 +10,15 @@ import snake.server.Settings;
  *
  * @author Gustavo
  */
-public class Main {
+public class ClientMain {
     public static void main(String[] args) {
         try {
             String url = "rmi://localhost/Server";
             ISnakeServer server = (ISnakeServer) Naming.lookup(url);
-            System.out.println(server.getPathDescriptor());
             String username = "gtotoy";
-            Path boxDirectory = Paths.get(Settings.client_folder_path);
-            //SnakeClient.createUser(server, username);
-            SnakeClient.setBoxDirectory(server, username, boxDirectory);
+            SnakeClient.createUser(server, username);
+            SnakeClient.setBoxDirectory(server, username, Settings.client_folder_path);
+            //server.printUsers();
         } catch (Exception e) {
             System.err.println(e);
         }

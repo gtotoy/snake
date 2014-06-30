@@ -6,25 +6,27 @@
 
 package snake.sync;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.File;
 import java.rmi.Naming;
+import java.util.Calendar;
 import snake.server.ISnakeServer;
-import snake.server.Settings;
 
 /**
  *
  * @author Gustavo
  */
-public class Main {
+public class SyncMain {
     public static void main(String[] args) {
-        System.out.println("Start SnakeSync");
+        System.out.println("Start SnakeSync -------------------- " + Calendar.getInstance().getTime());
+        System.out.println("\n");
         try {
             ISnakeServer server = (ISnakeServer) Naming.lookup("//localhost/Server");
-            
+            String username = args[0];
+            File boxDirectory = new File(args[1]);
+            System.out.println("username: " + username);
+            System.out.println("box directory: " + boxDirectory.toString());
         } catch (Exception e) {
             System.err.println(e);
         }
-        System.out.println("End SnakeSync");
     }
 }

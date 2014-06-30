@@ -19,7 +19,10 @@ import java.util.List;
 public interface ISnakeServer extends Remote {
     public boolean userExists(String username) throws RemoteException;
     public void createUser(String username) throws RemoteException, IOException;
+    public void printUsers() throws RemoteException;
     public boolean login(String username) throws RemoteException;
-    public void setBoxDirectory(Path directory) throws RemoteException;
+    public void logout(String username) throws RemoteException;
+    public void setBoxDirectory(String username, String directory) throws RemoteException;
+    public String getBoxDirectory(String username) throws RemoteException;
     public List<PathDescriptor> getPathDescriptor() throws RemoteException;
 }

@@ -15,7 +15,9 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -25,30 +27,61 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
     public SnakeServer( Path parentFolder ) throws RemoteException {
         super();
         parentFolder_ = parentFolder;
+        users_ = new HashMap<String, User>();
+        loggedUsers_ = new HashMap<String, User>();
     }
 
     @Override
     public boolean userExists(String username) throws RemoteException {
-        Path userFolderPath = parentFolder_.resolve(username);
-        return Files.exists(userFolderPath, LinkOption.NOFOLLOW_LINKS) && 
-                Files.isDirectory(userFolderPath, LinkOption.NOFOLLOW_LINKS);
+        return users_.containsKey(username);
     }
 
     
     
     @Override
     public void createUser(String username) throws RemoteException, IOException {
-        Files.createDirectory(parentFolder_.resolve(username));
+        User user = new User();
+        user.username = username;
+        users_.put(username, user);
+        Path userDirectory = parentFolder_.resolve(username);
+        if (!Files.exists(userDirectory)) Files.createDirectory(userDirectory);
     }
 
+    @Override
+    public void printUsers() throws RemoteException {
+        System.out.println(users_.toString());
+    }
+    
     @Override
     public boolean login(String username) throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        User user = users_.get(username);
+        if (user != null) {
+            loggedUsers_.put(user.username, user);
+            return true;
+        }
+        return false;
     }
-
+    
     @Override
-    public void setBoxDirectory(Path directory) throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void logout(String username) throws RemoteException {
+        loggedUsers_.remove(username);
+    }
+    
+    @Override
+    public void setBoxDirectory(String username, String directory) throws RemoteException {
+        User user = users_.get(username);
+        if (user != null) {
+            user.boxDirectory = directory;
+        }
+    }
+    
+    @Override
+    public String getBoxDirectory(String username) throws RemoteException {
+        User user = users_.get(username);
+        if (user != null) {
+            return user.boxDirectory;
+        }
+        return null;
     }
     
     @Override
@@ -65,4 +98,6 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
     }
     
     private Path parentFolder_;
+    private Map<String, User> loggedUsers_;
+    private Map<String, User> users_;
 }

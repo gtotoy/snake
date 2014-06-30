@@ -8,6 +8,9 @@ package testapacheio;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 
 import org.apache.commons.io.monitor.FileAlterationListener;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
@@ -24,12 +27,12 @@ public class SimpleTestMonitor {
         final long pollingInterval = 5 * 1000;
 
         File folder = new File(FOLDER);
-
+        
         if (!folder.exists()) {
             // Test to see if monitored folder exists
             throw new RuntimeException("Directory not found: " + FOLDER);
         }
-
+        
         FileAlterationObserver observer = new FileAlterationObserver(folder);
         FileAlterationMonitor monitor =
                 new FileAlterationMonitor(pollingInterval);
@@ -40,6 +43,17 @@ public class SimpleTestMonitor {
                 try {
                     // "file" is the reference to the newly created file
                     System.out.println("File created: "
+                            + file.getCanonicalPath());
+                } catch (IOException e) {
+                    e.printStackTrace(System.err);
+                }
+            }
+
+            @Override
+            public void onFileChange(File file) {
+                try {
+                    // "file" is the reference to the changed file
+                    System.out.println("File changed: "
                             + file.getCanonicalPath());
                 } catch (IOException e) {
                     e.printStackTrace(System.err);
@@ -67,5 +81,6 @@ public class SimpleTestMonitor {
         observer.addListener(listener);
         monitor.addObserver(observer);
         monitor.start();
+        System.out.println("After Start");
     }
 }

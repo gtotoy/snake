@@ -37,6 +37,52 @@ public class SnakeClient {
         }
     }
     
+    public static void setBoxDirectory(ISnakeServer server, String username, String directory) throws RemoteException {
+        if (server.userExists(username)) {
+            Path boxDirectory = Paths.get(directory);
+            Path absoluteBoxDirectory = boxDirectory.toAbsolutePath();
+            if ( Files.exists(boxDirectory) ) {
+                server.setBoxDirectory(username, absoluteBoxDirectory.toString());
+                System.out.println("Box directory (" + absoluteBoxDirectory.toString() + ") saved");
+                String[] args = {username, absoluteBoxDirectory.toString()};
+                runSnakeSync(args, absoluteBoxDirectory);
+            } else {
+                System.err.println("Directory (" + absoluteBoxDirectory + ") does not exist");
+            }
+        } else {
+            System.err.println("User " + username + " does not exist");
+        }
+    }
+    
+    public static void syncBox(ISnakeServer server, String username) throws RemoteException, IOException {
+        if (server.userExists(username)) {
+            String serverBoxDirectory = server.getBoxDirectory(username);
+            Path serverBoxPath = Paths.get(serverBoxDirectory);
+            Path boxDirectory = Paths.get("").resolve(serverBoxPath.getFileName());
+            Path absoluteBoxDirectory = boxDirectory.toAbsolutePath();
+            if ( !Files.exists(boxDirectory) ) {
+                Files.createDirectory(absoluteBoxDirectory);
+                System.out.println("Box directory (" + absoluteBoxDirectory.toString() + ") created");
+            }
+            String[] args = {username, absoluteBoxDirectory.toString()};
+            runSnakeSync(args, absoluteBoxDirectory);
+        } else {
+            System.err.println("User " + username + " does not exist");
+        }
+    }
+    
+    public static void autosyncBox(ISnakeServer server, String username) throws RemoteException, IOException {
+        if (server.userExists(username)) {
+            Path boxDirectory = Paths.get("");
+            Path absoluteBoxDirectory = boxDirectory.toAbsolutePath();
+            System.out.println("Using (" + absoluteBoxDirectory.toString() + ") as box directory");
+            String[] args = {username, absoluteBoxDirectory.toString()};
+            runSnakeSync(args, absoluteBoxDirectory);
+        } else {
+            System.err.println("User " + username + " does not exist");
+        }
+    }
+    
     public static void runSnakeSync(String[] args, Path directory) {
         // Paths.get("") is java_projects/SnakeClient
         Path snakeSyncPath = Paths.get("").resolve("dist/lib").resolve("SnakeSync.jar");
@@ -60,8 +106,5 @@ public class SnakeClient {
         }
     }
     
-    public static void setBoxDirectory(ISnakeServer server, String username, Path directory) throws RemoteException {
-        String[] args = {username, directory.toAbsolutePath().toString()};
-        runSnakeSync(args, directory);
-    }
+    
 }

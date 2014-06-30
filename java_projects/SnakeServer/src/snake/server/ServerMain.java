@@ -1,5 +1,6 @@
 package snake.server;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -11,7 +12,7 @@ import java.rmi.registry.Registry;
  *
  * @author Gustavo
  */
-public class Main {
+public class ServerMain {
     public static void main(String[] args) {
         if ( args.length < 1 ) {
             System.err.println("Usage: <folder>");
