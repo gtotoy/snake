@@ -6,10 +6,15 @@
 
 package snake.sync;
 
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.rmi.Naming;
+import java.util.ArrayList;
 import java.util.Calendar;
 import snake.server.ISnakeServer;
+import snake.server.PathDescriptor;
+import snake.server.PathUtils;
+import snake.server.Settings;
 
 /**
  *
@@ -17,14 +22,32 @@ import snake.server.ISnakeServer;
  */
 public class SyncMain {
     public static void main(String[] args) {
-        System.out.println("Start SnakeSync -------------------- " + Calendar.getInstance().getTime());
         System.out.println("\n");
+        System.out.println("Start SnakeSync -------------------- " + Calendar.getInstance().getTime());
+        System.out.println("");
         try {
             ISnakeServer server = (ISnakeServer) Naming.lookup("//localhost/Server");
             String username = args[0];
-            File boxDirectory = new File(args[1]);
+            Path boxDirectory = Paths.get(args[1]);
             System.out.println("username: " + username);
             System.out.println("box directory: " + boxDirectory.toString());
+            SyncSnake sync = new SyncSnake(server, username, boxDirectory);
+            for (;;) {
+                System.out.println("Start Sync " + Calendar.getInstance().getTime());
+                sync.pull();
+                sync.push();
+                Thread.sleep(Settings.syncWithServerSeconds * 1000);
+            }
+            /*
+            for ( PathDescriptor desc : PathUtils.getRelativePathDescriptors(boxDirectory.toFile()) ) {
+                SimpleRemoteInputStream istream = new SimpleRemoteInputStream(
+                    new FileInputStream(boxDirectory.resolve(desc.relative_path).toFile()));
+                try {
+                  server.receiveFile(username, desc, istream.export());
+                } finally {
+                  istream.close();
+                }
+            }*/
         } catch (Exception e) {
             System.err.println(e);
         }

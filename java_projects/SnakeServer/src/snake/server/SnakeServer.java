@@ -6,7 +6,12 @@
 
 package snake.server;
 
+import com.healthmarketscience.rmiio.RemoteInputStream;
+import com.healthmarketscience.rmiio.RemoteInputStreamClient;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -83,18 +88,34 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
         }
         return null;
     }
-    
+
     @Override
-    public List<PathDescriptor> getPathDescriptor() throws RemoteException {
-        PathDescriptor d = new PathDescriptor();
-        d.relative_path = Paths.get("").toAbsolutePath().toString();
-        d.status = PathDescriptor.Status.Deleted;
-        d.statusTimePoint = new Date();
-        
-        List<PathDescriptor> l = new ArrayList<PathDescriptor>();
-        l.add(d);
-        l.add(d);
-        return l;
+    public void receiveFile(String username, PathDescriptor descriptor, RemoteInputStream ristream) throws IOException {
+        InputStream istream = RemoteInputStreamClient.wrap(ristream);
+        FileOutputStream ostream = null;
+        try {
+          Path filePath = parentFolder_.resolve(username).resolve(descriptor.relative_path);
+          File file = filePath.toFile();
+          file.getParentFile().mkdirs();
+          file.createNewFile();
+          ostream = new FileOutputStream(file);
+          byte[] buffer = new byte[1024];
+          int bytesRead = 0;
+          while((bytesRead = istream.read(buffer)) >= 0) {
+            ostream.write(buffer, 0, bytesRead);
+          }
+          ostream.flush();
+        } finally {
+          try {
+            if(istream != null) {
+              istream.close();
+            }
+          } finally {
+            if(ostream != null) {
+              ostream.close();
+            }
+          }
+        }
     }
     
     private Path parentFolder_;

@@ -97,7 +97,7 @@ public class SnakeClient {
             commands.addAll(Arrays.asList(args));
             ProcessBuilder pb = new ProcessBuilder(commands);
             pb.directory(directory.toFile());
-            Path log = directory.resolve("snake_sync_log.txt");
+            Path log = directory.resolve("snake_sync_log.log");
             pb.redirectErrorStream(true);
             pb.redirectOutput(Redirect.appendTo(log.toFile()));
             Process p = pb.start();

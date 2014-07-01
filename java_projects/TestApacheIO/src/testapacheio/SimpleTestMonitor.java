@@ -81,6 +81,9 @@ public class SimpleTestMonitor {
         observer.addListener(listener);
         monitor.addObserver(observer);
         monitor.start();
-        System.out.println("After Start");
+        for (;;) {
+            Thread.sleep(pollingInterval);
+            System.out.println("After Start");
+        }
     }
 }

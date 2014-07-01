@@ -6,6 +6,7 @@
 
 package snake.server;
 
+import com.healthmarketscience.rmiio.RemoteInputStream;
 import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -24,5 +25,5 @@ public interface ISnakeServer extends Remote {
     public void logout(String username) throws RemoteException;
     public void setBoxDirectory(String username, String directory) throws RemoteException;
     public String getBoxDirectory(String username) throws RemoteException;
-    public List<PathDescriptor> getPathDescriptor() throws RemoteException;
+    public void receiveFile(String username, PathDescriptor descriptor, RemoteInputStream ristream) throws IOException;
 }
