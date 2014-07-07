@@ -8,7 +8,9 @@ package snake.server;
 
 import com.healthmarketscience.rmiio.RemoteInputStream;
 import com.healthmarketscience.rmiio.RemoteInputStreamClient;
+import com.healthmarketscience.rmiio.SimpleRemoteInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +36,7 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
         parentFolder_ = parentFolder;
         users_ = new HashMap<String, User>();
         loggedUsers_ = new HashMap<String, User>();
+        descriptors_ = new HashMap<String, ArrayList<PathDescriptor>>();
     }
 
     @Override
@@ -48,6 +51,7 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
         User user = new User();
         user.username = username;
         users_.put(username, user);
+        descriptors_.put(username, new ArrayList<PathDescriptor>());
         Path userDirectory = parentFolder_.resolve(username);
         if (!Files.exists(userDirectory)) Files.createDirectory(userDirectory);
     }
@@ -90,35 +94,53 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
     }
 
     @Override
+    public RemoteInputStream sendFile(String username, PathDescriptor descriptor) throws IOException {
+         SimpleRemoteInputStream istream = new SimpleRemoteInputStream(
+                        new FileInputStream(parentFolder_.resolve(username).resolve(descriptor.relative_path).toFile()));
+         return istream.export();
+    }
+    
+    @Override
     public void receiveFile(String username, PathDescriptor descriptor, RemoteInputStream ristream) throws IOException {
-        InputStream istream = RemoteInputStreamClient.wrap(ristream);
-        FileOutputStream ostream = null;
-        try {
-          Path filePath = parentFolder_.resolve(username).resolve(descriptor.relative_path);
-          File file = filePath.toFile();
-          file.getParentFile().mkdirs();
-          file.createNewFile();
-          ostream = new FileOutputStream(file);
-          byte[] buffer = new byte[1024];
-          int bytesRead = 0;
-          while((bytesRead = istream.read(buffer)) >= 0) {
-            ostream.write(buffer, 0, bytesRead);
-          }
-          ostream.flush();
-        } finally {
-          try {
-            if(istream != null) {
-              istream.close();
-            }
-          } finally {
-            if(ostream != null) {
-              ostream.close();
-            }
-          }
-        }
+        PathUtils.receiveFile(parentFolder_.resolve(username), getRelativeDescriptors(username), descriptor, ristream);
+    }
+    
+    @Override
+    public void deleteFile(String username, PathDescriptor descriptor) throws IOException {
+        PathUtils.deleteFile(parentFolder_.resolve(username), getRelativeDescriptors(username), descriptor.relative_path);
+    }
+    
+    @Override
+    public ArrayList<PathDescriptor> getRelativeDescriptors(String username) throws RemoteException {
+        return descriptors_.get(username);
+    }
+
+    @Override
+    public void startPull(String username) throws RemoteException {
+        System.out.println("Start Pull: " + username);
+        System.out.println(getRelativeDescriptors(username).toString());
+    }
+
+    @Override
+    public void endPull(String username) throws RemoteException {
+        System.out.println("End Pull: " + username);
+        System.out.println(getRelativeDescriptors(username).toString());
+    }
+
+    @Override
+    public void startPush(String username) throws RemoteException {
+        System.out.println("Start Push: " + username);
+        System.out.println(getRelativeDescriptors(username).toString());
+    }
+
+    @Override
+    public void endPush(String username) throws RemoteException {
+        System.out.println("End Push: " + username);
+        System.out.println(getRelativeDescriptors(username).toString());
     }
     
     private Path parentFolder_;
     private Map<String, User> loggedUsers_;
     private Map<String, User> users_;
+    private Map<String, ArrayList<PathDescriptor>> descriptors_;
 }

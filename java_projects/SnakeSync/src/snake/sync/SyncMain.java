@@ -34,20 +34,11 @@ public class SyncMain {
             SyncSnake sync = new SyncSnake(server, username, boxDirectory);
             for (;;) {
                 System.out.println("Start Sync " + Calendar.getInstance().getTime());
+                sync.updateDescriptors();
                 sync.pull();
                 sync.push();
                 Thread.sleep(Settings.syncWithServerSeconds * 1000);
             }
-            /*
-            for ( PathDescriptor desc : PathUtils.getRelativePathDescriptors(boxDirectory.toFile()) ) {
-                SimpleRemoteInputStream istream = new SimpleRemoteInputStream(
-                    new FileInputStream(boxDirectory.resolve(desc.relative_path).toFile()));
-                try {
-                  server.receiveFile(username, desc, istream.export());
-                } finally {
-                  istream.close();
-                }
-            }*/
         } catch (Exception e) {
             System.err.println(e);
         }
