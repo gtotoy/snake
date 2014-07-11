@@ -6,18 +6,19 @@
 
 package snake.client;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ProcessBuilder.Redirect;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import snake.server.ISnakeServer;
 import java.rmi.RemoteException;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -90,8 +91,14 @@ public class SnakeClient {
         Path snakeSyncPath = Paths.get("").resolve("dist/lib").resolve("SnakeSync.jar");
         if ( !(Files.exists(snakeSyncPath.toAbsolutePath(), LinkOption.NOFOLLOW_LINKS) && 
                 Files.isRegularFile(snakeSyncPath.toAbsolutePath(), LinkOption.NOFOLLOW_LINKS)) ) {
-            // SnakeServer.jar, SnakeClient.jar and SnakeSync.jar are at the same folder
-            snakeSyncPath = Paths.get("").resolve("SnakeSync.jar");
+            CodeSource codeSource = ClientMain.class.getProtectionDomain().getCodeSource();
+            try {
+                File jarFile = new File(codeSource.getLocation().toURI().getPath());
+                Path jarPath = jarFile.getParentFile().toPath();
+                snakeSyncPath = jarPath.resolve("lib").resolve("SnakeSync.jar");
+            } catch(URISyntaxException e) {
+                System.err.println(e.toString());
+            }
         }
         try {
             String[] command = {"java", "-jar", snakeSyncPath.toAbsolutePath().toString()};
