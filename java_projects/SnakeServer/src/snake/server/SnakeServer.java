@@ -109,14 +109,16 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
 
     @Override
     public void startPull(String username) throws RemoteException {
-        lock_.readLock().lock();
+        //lock_.readLock().lock();
+        lock_.writeLock().lock();
         System.out.println("Start Pull: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
     }
 
     @Override
     public void endPull(String username) throws RemoteException {
-        lock_.readLock().unlock();
+        //lock_.readLock().unlock();
+        lock_.writeLock().unlock();
         System.out.println("End Pull: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
     }
