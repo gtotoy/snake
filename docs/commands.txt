@@ -1,0 +1,5 @@
+java -Djava.rmi.server.hostname=192.168.1.104 -jar "/home/gus/Documents/snake/java_projects/SnakeServer/dist/SnakeServer.jar" "/home/gus/Documents/snake_test/server"
+java -jar "/home/gus/Documents/snake/java_projects/SnakeClient/dist/SnakeClient.jar" -cuser gtotoy
+java -jar "/home/gus/Documents/snake/java_projects/SnakeClient/dist/SnakeClient.jar" -user gtotoy -setboxdir "/home/gus/Documents/snake_test/client"
+java -jar "/home/gus/Documents/snake/java_projects/SnakeClient/dist/SnakeClient.jar" -user gtotoy -syncbox
+java -jar "/home/gus/Documents/snake/java_projects/SnakeClient/dist/SnakeClient.jar" -user gtotoy -autosyncbox

@@ -1,0 +1,41 @@
+.TH SnakeBox 1 10-07-2014 "SnakeProgram 1.0" "Manual de usuario de SnakeBox"
+.SH NAME
+.B SnakeBox
+es una aplicacion para colocar archivos en la nube.
+.SH SYNOPSIS
+.B snakeBox
+[-Opciones]
+.SH DESCRIPTION
+.B SnakeBox
+es una aplicación
+.B cliente-servidor
+que simula el almacenamiento de archivos de texto en la nube mediante el uso de mecanismos de sincronización, el cual le permite a un usuario local almacenar archivos en su directorio y estos son subidos automáticamente al servidor.
+
+.PP
+El usurio puede sincronizar sus archivos de manera general mediante el uso de comandos que se describiran a continuacion.
+
+.SH OPCIONES
+.TP
+.B -cuser [nombre de usuario]
+crea un nuevo usuario llamado nombre de usuario
+.TP
+.B -user [nombre de usuario] [ruta]
+define la carpeta local(del lado del cliente).
+.TP
+.B -cuser [nombre de usuario] -syncbox
+crea una carpeta local en el directorio actual(carpeta creada con anterioridad)
+.TP
+.B -user [nombre de usuario] -autosyncbox
+ejecuta un proceso background.
+.SH Ficheros
+Para que snakeBox ejecute correctamente, necesita el .B snakeBox.jar
+el cual se cargan automaticamente las librerias necesarias para una correcta ejecucion de la aplicacion.
+.SH SEE ALSO
+Referencia a documentos afines, incluyendo otras páginas del manual.
+.SH BUGS
+Detalles sorprendentes (no siempre tienen que ser problemas)
+.SH AUTHOR
+Gustavo Totoy gtotoy@gmail.com
+.br
+Frank Hermida frankherm4@gmail.com
+
