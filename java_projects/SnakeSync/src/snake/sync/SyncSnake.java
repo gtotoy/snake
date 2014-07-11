@@ -44,37 +44,34 @@ public class SyncSnake {
     public void pull() {
         ArrayList<PathDescriptor> localDescriptors = descriptors_;
         try {
-            server_.startPull(username_);
-            ArrayList<PathDescriptor> serverDescriptors = server_.getRelativeDescriptors(username_);
-            for (int i = 0; i < serverDescriptors.size(); ++i) {
-                PathDescriptor serverPD = serverDescriptors.get(i);
-                PathDescriptor localPD = PathDescriptor.FindIfEqualRelativePath(localDescriptors, serverPD);
-                switch (serverPD.status) {
-                    case Deleted:
-                        if (localPD != null && localPD.status == PathDescriptor.Status.Modified 
-                                && localPD.lastModified.before(serverPD.statusTimePoint)
-                                && localPD.lastCreationTime.before(serverPD.statusTimePoint))
-                            PathUtils.deleteFile(boxDirectory_, localDescriptors, localPD.relative_path);
-                        break;
-                    case Modified:
-                        if (localPD != null) {
-                            if (localPD.lastModified.before(serverPD.lastModified)) {
-                                receiveFile(serverPD, server_.sendFile(username_, serverPD));
+            synchronized (server_.readLock()) {
+                server_.startPull(username_);
+                ArrayList<PathDescriptor> serverDescriptors = server_.getRelativeDescriptors(username_);
+                for (int i = 0; i < serverDescriptors.size(); ++i) {
+                    PathDescriptor serverPD = serverDescriptors.get(i);
+                    PathDescriptor localPD = PathDescriptor.FindIfEqualRelativePath(localDescriptors, serverPD);
+                    switch (serverPD.status) {
+                        case Deleted:
+                            if (localPD != null && localPD.status == PathDescriptor.Status.Modified 
+                                    && localPD.lastModified.before(serverPD.statusTimePoint)
+                                    && localPD.lastCreationTime.before(serverPD.statusTimePoint))
+                                PathUtils.deleteFile(boxDirectory_, localDescriptors, localPD.relative_path);
+                            break;
+                        case Modified:
+                            if (localPD != null) {
+                                if (localPD.lastModified.before(serverPD.lastModified)) {
+                                    receiveFile(serverPD, server_.sendFile(username_, serverPD));
+                                }
+                            } else {
+                              receiveFile(serverPD, server_.sendFile(username_, serverPD));
                             }
-                        } else {
-                          receiveFile(serverPD, server_.sendFile(username_, serverPD));
-                        }
-                        break;
+                            break;
+                    }
                 }
+                server_.endPull(username_);
             }
         } catch(Exception e) {
             System.err.println(e.toString());
-        } finally {
-            try {
-                server_.endPull(username_);
-            } catch (Exception e) {
-                System.err.println(e.toString());
-            }
         }
     }
     
@@ -86,43 +83,40 @@ public class SyncSnake {
             ArrayList<PathDescriptor> localDescriptors = new ArrayList<>(descriptors_);
             Path localDirectory = tempPath;
             
-            server_.startPush(username_);
-            ArrayList<PathDescriptor> serverDescriptors = server_.getRelativeDescriptors(username_);
-            for (int i = 0; i < localDescriptors.size(); ++i) {
-                PathDescriptor localPD = localDescriptors.get(i);
-                PathDescriptor serverPD = PathDescriptor.FindIfEqualRelativePath(serverDescriptors, localPD);
-                switch (localPD.status) {
-                    case Deleted:
-                        if (serverPD != null && serverPD.status == PathDescriptor.Status.Modified
-                                && serverPD.lastModified.before(localPD.statusTimePoint) )
-                            server_.deleteFile(username_, serverPD);
-                        break;
-                    case Modified:
-                        SimpleRemoteInputStream istream = new SimpleRemoteInputStream(
-                        new FileInputStream(localDirectory.resolve(localPD.relative_path).toFile()));
-                        try {
-                            if (serverPD != null) {
-                                if ( serverPD.status == PathDescriptor.Status.Deleted || 
-                                        serverPD.lastModified.before(localPD.lastModified))
-                                    server_.receiveFile(username_, localPD, istream.export());
-                            } else {
-                              server_.receiveFile(username_, localPD, istream.export());
+            synchronized (server_.writeLock()) {
+                server_.startPush(username_);
+                ArrayList<PathDescriptor> serverDescriptors = server_.getRelativeDescriptors(username_);
+                for (int i = 0; i < localDescriptors.size(); ++i) {
+                    PathDescriptor localPD = localDescriptors.get(i);
+                    PathDescriptor serverPD = PathDescriptor.FindIfEqualRelativePath(serverDescriptors, localPD);
+                    switch (localPD.status) {
+                        case Deleted:
+                            if (serverPD != null && serverPD.status == PathDescriptor.Status.Modified
+                                    && serverPD.lastModified.before(localPD.statusTimePoint) )
+                                server_.deleteFile(username_, serverPD);
+                            break;
+                        case Modified:
+                            SimpleRemoteInputStream istream = new SimpleRemoteInputStream(
+                            new FileInputStream(localDirectory.resolve(localPD.relative_path).toFile()));
+                            try {
+                                if (serverPD != null) {
+                                    if ( serverPD.status == PathDescriptor.Status.Deleted || 
+                                            serverPD.lastModified.before(localPD.lastModified))
+                                        server_.receiveFile(username_, localPD, istream.export());
+                                } else {
+                                  server_.receiveFile(username_, localPD, istream.export());
+                                }
+                            } finally {
+                              istream.close();
                             }
-                        } finally {
-                          istream.close();
-                        }
-                        break;
+                            break;
+                    }
                 }
+                server_.endPush(username_);
             }
         } catch(Exception e) {
             System.err.println(e.toString());
         } finally {
-            try {
-                server_.endPush(username_);
-            } catch (Exception e) {
-                System.err.println(e.toString());
-            }
-            
             try {
                 if (tempPath != null) FileUtils.deleteDirectory(tempPath.toFile());
             } catch (IOException e) {
