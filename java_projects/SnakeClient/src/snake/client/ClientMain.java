@@ -13,7 +13,8 @@ import snake.server.Settings;
 public class ClientMain {
     public static void main(String[] args) {
         try {
-            String url = "rmi://localhost/Server";
+            String ip = args[0];
+            String url = "rmi://" + ip + "/Server";
             ISnakeServer server = (ISnakeServer) Naming.lookup(url);
             String username = "gtotoy";
             SnakeClient.createUser(server, username);

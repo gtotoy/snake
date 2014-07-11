@@ -7,24 +7,20 @@
 package snake.server;
 
 import com.healthmarketscience.rmiio.RemoteInputStream;
-import com.healthmarketscience.rmiio.RemoteInputStreamClient;
 import com.healthmarketscience.rmiio.SimpleRemoteInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -35,10 +31,19 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
         super();
         parentFolder_ = parentFolder;
         users_ = new HashMap<String, User>();
-        loggedUsers_ = new HashMap<String, User>();
         descriptors_ = new HashMap<String, ArrayList<PathDescriptor>>();
+        try {
+            config_ = parentFolder_.resolve(Settings.config);
+            if (!Files.exists(config_)) Files.createDirectory(config_);
+            usersPath_ = config_.resolve(Settings.users);
+            if (Files.exists(usersPath_)) loadUsers();
+            descriptorsPath_ = config_.resolve(Settings.usersPathDescriptors);
+            if (Files.exists(descriptorsPath_)) loadDescriptors();
+        } catch (IOException e) {
+            System.out.println(e.toString());
+        }
     }
-
+    
     @Override
     public boolean userExists(String username) throws RemoteException {
         return users_.containsKey(username);
@@ -51,9 +56,10 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
         User user = new User();
         user.username = username;
         users_.put(username, user);
-        descriptors_.put(username, new ArrayList<PathDescriptor>());
         Path userDirectory = parentFolder_.resolve(username);
         if (!Files.exists(userDirectory)) Files.createDirectory(userDirectory);
+        descriptors_.put(username, PathUtils.getRelativePathDescriptors(userDirectory.toFile(), true));
+        saveUsers();
     }
 
     @Override
@@ -62,25 +68,11 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
     }
     
     @Override
-    public boolean login(String username) throws RemoteException {
-        User user = users_.get(username);
-        if (user != null) {
-            loggedUsers_.put(user.username, user);
-            return true;
-        }
-        return false;
-    }
-    
-    @Override
-    public void logout(String username) throws RemoteException {
-        loggedUsers_.remove(username);
-    }
-    
-    @Override
     public void setBoxDirectory(String username, String directory) throws RemoteException {
         User user = users_.get(username);
         if (user != null) {
             user.boxDirectory = directory;
+            saveUsers();
         }
     }
     
@@ -117,30 +109,104 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
 
     @Override
     public void startPull(String username) throws RemoteException {
+        lock_.readLock().lock();
         System.out.println("Start Pull: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
     }
 
     @Override
     public void endPull(String username) throws RemoteException {
+        lock_.readLock().unlock();
         System.out.println("End Pull: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
     }
-
+    
     @Override
     public void startPush(String username) throws RemoteException {
+        lock_.writeLock().lock();
         System.out.println("Start Push: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
     }
-
+    
     @Override
     public void endPush(String username) throws RemoteException {
+        lock_.writeLock().unlock();
         System.out.println("End Push: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
+        saveDescriptors();
+    }
+    
+    private void saveUsers () {
+        try {
+           FileOutputStream fileOut = new FileOutputStream(usersPath_.toFile());
+           ObjectOutputStream out = new ObjectOutputStream(fileOut);
+           out.writeObject(users_);
+           out.close();
+           fileOut.close();
+        } catch(IOException i) {
+            System.out.println(i.toString());
+        }
+    }
+    
+    private void loadUsers () {
+        try {
+         FileInputStream fileIn = new FileInputStream(usersPath_.toFile());
+         ObjectInputStream in = new ObjectInputStream(fileIn);
+         users_ = (HashMap<String, User>) in.readObject();
+         in.close();
+         fileIn.close();
+         System.out.println(users_.toString());
+      } catch(IOException i) {
+         System.out.println(i.toString());
+         return;
+      } catch(ClassNotFoundException c) {
+         System.out.println("Class not found");
+         c.printStackTrace();
+         return;
+      }
+    }
+    
+    private void saveDescriptors () {
+        try {
+           FileOutputStream fileOut = new FileOutputStream(descriptorsPath_.toFile());
+           ObjectOutputStream out = new ObjectOutputStream(fileOut);
+           out.writeObject(descriptors_);
+           out.close();
+           fileOut.close();
+        } catch(IOException i) {
+            System.out.println(i.toString());
+        }
+    }
+    
+    private void loadDescriptors () {
+        try {
+         FileInputStream fileIn = new FileInputStream(descriptorsPath_.toFile());
+         ObjectInputStream in = new ObjectInputStream(fileIn);
+         descriptors_ = (HashMap<String, ArrayList<PathDescriptor>>) in.readObject();
+         in.close();
+         fileIn.close();
+         System.out.println(descriptors_.toString());
+        
+        for (String key : descriptors_.keySet()) {
+            Path path = parentFolder_.resolve(key);
+            ArrayList<PathDescriptor> newDescriptors = PathUtils.getRelativePathDescriptors(path.toFile(), true);
+            PathDescriptor.updateDescriptors(descriptors_.get(key), newDescriptors);
+        }
+      } catch(IOException i) {
+         System.out.println(i.toString());
+         return;
+      } catch(ClassNotFoundException c) {
+         System.out.println("Class not found");
+         c.printStackTrace();
+         return;
+      }
     }
     
     private Path parentFolder_;
-    private Map<String, User> loggedUsers_;
+    private Path config_;
+    private Path usersPath_;
+    private Path descriptorsPath_;
     private Map<String, User> users_;
     private Map<String, ArrayList<PathDescriptor>> descriptors_;
+    private final ReentrantReadWriteLock lock_ = new ReentrantReadWriteLock();
 }

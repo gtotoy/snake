@@ -7,20 +7,17 @@
 package snake.sync;
 
 import com.healthmarketscience.rmiio.RemoteInputStream;
-import com.healthmarketscience.rmiio.RemoteInputStreamClient;
 import com.healthmarketscience.rmiio.SimpleRemoteInputStream;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
+import org.apache.commons.io.FileUtils;
 import snake.server.ISnakeServer;
 import snake.server.PathDescriptor;
 import snake.server.PathUtils;
+import snake.server.Settings;
 
 /**
  *
@@ -40,47 +37,8 @@ public class SyncSnake {
     }
     
     public void updateDescriptors() {
-        System.out.println("Before Update");
-        System.out.println(descriptors_.toString());
         ArrayList<PathDescriptor> newDescriptors = PathUtils.getRelativePathDescriptors(boxDirectory_.toFile(), false);
-        int currentSize = descriptors_.size();
-        for (int i = 0; i < currentSize; ++i) {
-            PathDescriptor current = descriptors_.get(i);
-            PathDescriptor newDescriptor = PathDescriptor.FindIfEqualRelativePath(newDescriptors, current);
-            if (newDescriptor == null) {
-                switch(current.status) {
-                    case Deleted:
-                        break;
-                    case Modified:
-                        current.status = PathDescriptor.Status.Deleted;
-                        current.statusTimePoint = new Date();
-                        break;
-                }
-            } else {
-                switch(current.status) {
-                    case Deleted:
-                        current.lastCreationTime = new Date();
-                    case Modified:
-                        current.status = PathDescriptor.Status.Modified;
-                        current.statusTimePoint = newDescriptor.statusTimePoint;
-                        current.lastModified = newDescriptor.lastModified;
-                        break;
-                }
-            }
-        }
-        
-        int newSize = newDescriptors.size();
-        for (int i = 0; i < newSize; ++i) {
-            PathDescriptor newDescriptor = newDescriptors.get(i);
-            PathDescriptor current = PathDescriptor.FindIfEqualRelativePath(descriptors_, newDescriptor);
-            if (current == null) {
-                newDescriptor.statusTimePoint = new Date();
-                descriptors_.add(newDescriptor);
-            }
-        }
-        
-        System.out.println("After Update");
-        System.out.println(descriptors_.toString());
+        PathDescriptor.updateDescriptors(descriptors_, newDescriptors);
     }
     
     public void pull() {
@@ -109,15 +67,25 @@ public class SyncSnake {
                         break;
                 }
             }
-            server_.endPull(username_);
         } catch(Exception e) {
             System.err.println(e.toString());
+        } finally {
+            try {
+                server_.endPull(username_);
+            } catch (Exception e) {
+                System.err.println(e.toString());
+            }
         }
     }
     
     public void push () {
-        ArrayList<PathDescriptor> localDescriptors = descriptors_;
+        Path tempPath = null;
         try {
+            tempPath = Files.createTempDirectory(Settings.tempDirectory);
+            FileUtils.copyDirectory(boxDirectory_.toFile(), tempPath.toFile(), true);
+            ArrayList<PathDescriptor> localDescriptors = new ArrayList<>(descriptors_);
+            Path localDirectory = tempPath;
+            
             server_.startPush(username_);
             ArrayList<PathDescriptor> serverDescriptors = server_.getRelativeDescriptors(username_);
             for (int i = 0; i < localDescriptors.size(); ++i) {
@@ -131,10 +99,11 @@ public class SyncSnake {
                         break;
                     case Modified:
                         SimpleRemoteInputStream istream = new SimpleRemoteInputStream(
-                        new FileInputStream(boxDirectory_.resolve(localPD.relative_path).toFile()));
+                        new FileInputStream(localDirectory.resolve(localPD.relative_path).toFile()));
                         try {
                             if (serverPD != null) {
-                                if ( serverPD.status == PathDescriptor.Status.Deleted || serverPD.lastModified.before(localPD.lastModified))
+                                if ( serverPD.status == PathDescriptor.Status.Deleted || 
+                                        serverPD.lastModified.before(localPD.lastModified))
                                     server_.receiveFile(username_, localPD, istream.export());
                             } else {
                               server_.receiveFile(username_, localPD, istream.export());
@@ -145,9 +114,20 @@ public class SyncSnake {
                         break;
                 }
             }
-            server_.endPush(username_);
         } catch(Exception e) {
             System.err.println(e.toString());
+        } finally {
+            try {
+                server_.endPush(username_);
+            } catch (Exception e) {
+                System.err.println(e.toString());
+            }
+            
+            try {
+                if (tempPath != null) FileUtils.deleteDirectory(tempPath.toFile());
+            } catch (IOException e) {
+                System.out.println(e.toString());
+            }
         }
     }
     
