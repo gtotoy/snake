@@ -26,9 +26,10 @@ public class SyncMain {
         System.out.println("Start SnakeSync -------------------- " + Calendar.getInstance().getTime());
         System.out.println("");
         try {
-            ISnakeServer server = (ISnakeServer) Naming.lookup("//localhost/Server");
             String username = args[0];
             Path boxDirectory = Paths.get(args[1]);
+            String ip = args[2];
+            ISnakeServer server = (ISnakeServer) Naming.lookup("rmi://" + ip + "/Server");
             System.out.println("username: " + username);
             System.out.println("box directory: " + boxDirectory.toString());
             SyncSnake sync = new SyncSnake(server, username, boxDirectory);
