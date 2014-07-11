@@ -18,7 +18,7 @@ public class ClientMain {
             ISnakeServer server = (ISnakeServer) Naming.lookup(url);
             String username = "gtotoy";
             SnakeClient.createUser(server, username);
-            SnakeClient.setBoxDirectory(server, username, Settings.client_folder_path, ip);
+            SnakeClient.setBoxDirectory(server, username, Settings.client1_folder_path, ip);
             //server.printUsers();
         } catch (Exception e) {
             System.err.println(e);

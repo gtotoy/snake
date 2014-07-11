@@ -7,13 +7,12 @@
 package snake.server;
 
 import com.healthmarketscience.rmiio.RemoteInputStream;
-import com.healthmarketscience.rmiio.SimpleRemoteInputStream;
 import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 /**
  *
@@ -33,4 +32,6 @@ public interface ISnakeServer extends Remote {
     public void endPull(String username) throws RemoteException;
     public void startPush(String username) throws RemoteException;
     public void endPush(String username) throws RemoteException;
+    public ReadLock readLock() throws RemoteException;
+    public WriteLock writeLock() throws RemoteException;
 }

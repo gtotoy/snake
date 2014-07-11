@@ -109,33 +109,37 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
 
     @Override
     public void startPull(String username) throws RemoteException {
-        //lock_.readLock().lock();
-        lock_.writeLock().lock();
         System.out.println("Start Pull: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
     }
 
     @Override
     public void endPull(String username) throws RemoteException {
-        //lock_.readLock().unlock();
-        lock_.writeLock().unlock();
         System.out.println("End Pull: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
     }
     
     @Override
     public void startPush(String username) throws RemoteException {
-        lock_.writeLock().lock();
         System.out.println("Start Push: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
     }
     
     @Override
     public void endPush(String username) throws RemoteException {
-        lock_.writeLock().unlock();
         System.out.println("End Push: " + username);
         System.out.println(getRelativeDescriptors(username).toString());
         saveDescriptors();
+    }
+    
+    @Override
+    public ReentrantReadWriteLock.ReadLock readLock() throws RemoteException {
+        return lock_.readLock();
+    }
+    
+    @Override
+    public ReentrantReadWriteLock.WriteLock writeLock() throws RemoteException {
+        return lock_.writeLock();
     }
     
     private void saveUsers () {
@@ -182,18 +186,18 @@ public class SnakeServer extends UnicastRemoteObject implements ISnakeServer {
     
     private void loadDescriptors () {
         try {
-         FileInputStream fileIn = new FileInputStream(descriptorsPath_.toFile());
-         ObjectInputStream in = new ObjectInputStream(fileIn);
-         descriptors_ = (HashMap<String, ArrayList<PathDescriptor>>) in.readObject();
-         in.close();
-         fileIn.close();
-         System.out.println(descriptors_.toString());
+            FileInputStream fileIn = new FileInputStream(descriptorsPath_.toFile());
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            descriptors_ = (HashMap<String, ArrayList<PathDescriptor>>) in.readObject();
+            in.close();
+            fileIn.close();
+            System.out.println(descriptors_.toString());
         
-        for (String key : descriptors_.keySet()) {
-            Path path = parentFolder_.resolve(key);
-            ArrayList<PathDescriptor> newDescriptors = PathUtils.getRelativePathDescriptors(path.toFile(), true);
-            PathDescriptor.updateDescriptors(descriptors_.get(key), newDescriptors);
-        }
+            for (String username : descriptors_.keySet()) {
+                Path path = parentFolder_.resolve(username);
+                ArrayList<PathDescriptor> newDescriptors = PathUtils.getRelativePathDescriptors(path.toFile(), true);
+                PathDescriptor.updateDescriptors(descriptors_.get(username), newDescriptors);
+            }
       } catch(IOException i) {
          System.out.println(i.toString());
          return;
