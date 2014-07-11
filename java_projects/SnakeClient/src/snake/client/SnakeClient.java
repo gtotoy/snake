@@ -7,6 +7,7 @@
 package snake.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -16,6 +17,7 @@ import snake.server.ISnakeServer;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -102,7 +104,8 @@ public class SnakeClient {
             pb.redirectOutput(Redirect.appendTo(log.toFile()));
             Process p = pb.start();
         } catch (IOException e) {
-            System.err.println(e);
+            //System.err.println(e);
+            e.printStackTrace();
         }
     }
     
