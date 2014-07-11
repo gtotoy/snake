@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 
 /**
@@ -37,7 +38,7 @@ public class PathUtils {
             Path relativePath = folderPath.relativize(filePath);
             
             PathDescriptor descriptor = new PathDescriptor();
-            descriptor.relative_path = relativePath.toString();
+            descriptor.relative_path = FilenameUtils.separatorsToUnix(relativePath.toString());
             descriptor.status = PathDescriptor.Status.Modified;
             descriptor.statusTimePoint = new Date();
             descriptor.lastModified = new Date(file.lastModified());
