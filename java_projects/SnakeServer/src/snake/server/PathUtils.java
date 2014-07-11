@@ -33,7 +33,7 @@ public class PathUtils {
         while ( filesIter.hasNext() ) {
             Path folderPath = folder.toPath();
             File file = filesIter.next();
-            Path filePath = file.toPath();
+            Path filePath = file.toPath().toAbsolutePath();
             Path relativePath = folderPath.relativize(filePath);
             
             PathDescriptor descriptor = new PathDescriptor();
@@ -69,7 +69,7 @@ public class PathUtils {
     public static void receiveFile(Path localDirectory, ArrayList<PathDescriptor> localDescriptors, PathDescriptor inDescriptor, RemoteInputStream ristream) throws IOException {
         InputStream istream = RemoteInputStreamClient.wrap(ristream);
         FileOutputStream ostream = null;
-        Path filePath = localDirectory.resolve(inDescriptor.relative_path);
+        Path filePath = localDirectory.resolve(inDescriptor.relative_path).toAbsolutePath();
         File file = filePath.toFile();
         try {
           file.getParentFile().mkdirs();
